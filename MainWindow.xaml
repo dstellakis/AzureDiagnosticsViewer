@@ -1,0 +1,240 @@
+﻿<Window x:Class="AzureDiagnosticsViewer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+				xmlns:conv="clr-namespace:AzureDiagnosticsViewer.Converters"
+				xmlns:charting="clr-namespace:System.Windows.Controls.DataVisualization.Charting;assembly=System.Windows.Controls.DataVisualization.Toolkit"
+        Title="AzureDiagnosticsViewer" Width="1024" Height="920"
+				DataContext="{Binding MainViewModel, Source={StaticResource Locator}}">
+	<Window.Resources>
+		<conv:LevelIdToTextConverter x:Key="LevelIdToTextConverter" />
+	</Window.Resources>
+
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*" />
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="Auto" />
+		</Grid.RowDefinitions>
+
+		<Grid Grid.Row="0" Margin="5,10,5,10">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="Auto" />
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="Auto" />
+				<RowDefinition Height="Auto" />
+			</Grid.RowDefinitions>
+
+			<TextBlock Grid.Column="0" Grid.Row="0" Margin="5,0,5,0" Text="Subscription:" />
+			<ComboBox Grid.Column="0" Grid.Row="1" x:Name="subscriptionsList" Margin="5" Padding="5" Width="300"
+						ItemsSource="{Binding Subscriptions}" SelectedItem="{Binding SelectedSubscription}">
+				<ComboBox.ItemTemplate>
+					<DataTemplate>
+						<TextBlock Text="{Binding Title}" />
+					</DataTemplate>
+				</ComboBox.ItemTemplate>
+			</ComboBox>
+
+			<TextBlock Grid.Column="1" Grid.Row="0" Margin="5,0,5,0" Text="From:" />
+			<TextBox Grid.Column="1" Grid.Row="1" x:Name="txtDateFrom" Margin="5" Padding="5" Width="200" />
+
+			<TextBlock Grid.Column="2" Grid.Row="0" Margin="5,0,5,0" Text="To:" />
+			<TextBox Grid.Column="2" Grid.Row="1" x:Name="txtDateTo" Margin="5" Padding="5" Width="200" />
+		</Grid>
+
+		<TabControl Grid.Row="1" TabStripPlacement="Top" Margin="10,0,10,10">
+
+			<TabItem Name="tbEventLog" Header="Event Log">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*" />
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto" />
+						<RowDefinition Height="*" />
+						<RowDefinition Height="Auto" />
+						<RowDefinition Height="*" />
+					</Grid.RowDefinitions>
+
+					<Grid Grid.Column="0" Grid.Row="0" Margin="0,10,0,0">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="Auto" />
+							<ColumnDefinition Width="Auto" />
+							<ColumnDefinition Width="Auto" />
+							<ColumnDefinition Width="Auto" />
+							<ColumnDefinition Width="Auto" />
+							<ColumnDefinition Width="Auto" />
+							<ColumnDefinition Width="*" />
+						</Grid.ColumnDefinitions>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto" />
+							<RowDefinition Height="Auto" />
+						</Grid.RowDefinitions>
+
+						<TextBlock Grid.Column="3" Grid.Row="0" Margin="5,0,5,0" Text="Type:" />
+						<ComboBox Grid.Column="3" Grid.Row="1" x:Name="typeList" Margin="5" Padding="5" Width="90" >
+							<ComboBox.Items>
+								<ComboBoxItem Content="All" IsSelected="True" />
+								<ComboBoxItem Content="Information" />
+								<ComboBoxItem Content="Warning" />
+								<ComboBoxItem Content="Error" />
+								<ComboBoxItem Content="Critical"/>
+							</ComboBox.Items>
+						</ComboBox>
+
+						<TextBlock Grid.Column="4" Grid.Row="0" Margin="5,0,5,0" Text="Query:" />
+						<TextBox Grid.Column="4" Grid.Row="1" x:Name="txtQuery" Width="250" Padding="5" Margin="5" />
+
+						<TextBlock Grid.Column="5" Grid.Row="0" Margin="5,0,5,0" Text="Message Regex:" />
+						<TextBox Grid.Column="5" Grid.Row="1" x:Name="txtMessage" Width="350" Padding="5" Margin="5" />
+
+						<StackPanel Orientation="Horizontal" Grid.Column="6" Grid.Row="0" Grid.RowSpan="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+							<Button Click="SearchEventLogButton_Click" Content="Search" Margin="5" Padding="5" />
+							<Button Click="ExportEventLogButton_Click" Content="Export" Margin="5" Padding="5" />
+							<CheckBox Click="EventLogCheckBox_Click" x:Name="chkAutoRefresh" Content="Auto refresh" Margin="10" />
+						</StackPanel>
+					</Grid>
+
+					<DataGrid x:Name="logEntriesGrid" Grid.Column="0" Grid.Row="1" ItemsSource="{Binding LogEntries}"
+								AutoGenerateColumns="False" VerticalScrollBarVisibility="Visible" Margin="5"
+								CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="True"
+								GridLinesVisibility="None" Background="#FFFFFF" RowBackground="#FFFFFF" AlternatingRowBackground="#F9F9F9">
+						<DataGrid.Columns>
+							<DataGridTemplateColumn Header="Date" Width="120" IsReadOnly="True">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding EventDateTimeLocal, StringFormat={}{0:d/M/yyyy HH:mm:ss}}" Margin="3" />
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+							<DataGridTemplateColumn Header="Type" Width="90" IsReadOnly="True">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding Level, Converter={StaticResource LevelIdToTextConverter}}" Margin="3" />
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+							<DataGridTemplateColumn Header="DeploymentId" Width="220" IsReadOnly="True">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding DeploymentId}" Margin="3" />
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+							<DataGridTemplateColumn Header="Role" Width="220" IsReadOnly="True">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding Role}" Margin="3" />
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+							<DataGridTemplateColumn Header="RoleInstance" Width="290" IsReadOnly="True">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding RoleInstance}" Margin="3" />
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+						</DataGrid.Columns>
+					</DataGrid>
+
+					<GridSplitter Grid.Column="0" Grid.Row="2" Height="3" HorizontalAlignment="Stretch" />
+					
+					<TextBox Grid.Column="0" Grid.Row="3" VerticalAlignment="Stretch" AcceptsReturn="True" Margin="5" 
+						ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Auto"
+						Text="{Binding ElementName=logEntriesGrid, Path=SelectedItem.Message}" IsReadOnly="True" Background="#F0F0F0" />
+
+				</Grid>
+			</TabItem>
+
+			<TabItem Name="tbPerformanceLog" Header="Performance Counters">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*" />
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto" />
+						<RowDefinition Height="*" />
+					</Grid.RowDefinitions>
+
+					<Grid Grid.Column="0" Grid.Row="0" Margin="0,10,0,0">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="Auto" />
+							<ColumnDefinition Width="Auto" />
+							<ColumnDefinition Width="Auto" />
+							<ColumnDefinition Width="Auto" />
+							<ColumnDefinition Width="Auto" />
+							<ColumnDefinition Width="Auto" />
+							<ColumnDefinition Width="*" />
+						</Grid.ColumnDefinitions>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto" />
+							<RowDefinition Height="Auto" />
+						</Grid.RowDefinitions>
+
+						<TextBlock Grid.Column="0" Grid.Row="0" Margin="5,0,5,0" Text="Role:" />
+						<ComboBox Grid.Column="0" Grid.Row="1" x:Name="performanceRolesList" Margin="5" Padding="5" Width="300"
+								ItemsSource="{Binding SelectedSubscription.Roles}" SelectedItem="{Binding SelectedRole}">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding Name}" />
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+						
+						<TextBlock Grid.Column="1" Grid.Row="0" Margin="5,0,5,0" Text="Counter:" />
+						<ComboBox Grid.Column="1" Grid.Row="1" x:Name="performanceCounterList" Margin="5" Padding="5" Width="400"
+								ItemsSource="{Binding SelectedRole.PerformanceCounters}">
+							<ComboBox.ItemTemplate>
+								<DataTemplate>
+									<TextBlock Text="{Binding}" />
+								</DataTemplate>
+							</ComboBox.ItemTemplate>
+						</ComboBox>
+
+						<StackPanel Orientation="Horizontal" Grid.Column="6" Grid.Row="0" Grid.RowSpan="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+							<Button Click="SearchPerformanceCountersButton_Click" Content="Search" Margin="5" Padding="5" />
+							<Button Click="ExportPerformanceCountersButton_Click" Content="Export" Margin="5" Padding="5" />
+						</StackPanel>
+					</Grid>
+
+					<charting:Chart Grid.Column="0" Grid.Row="1" Name="lineChart" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+						<charting:Chart.Axes>
+							<charting:LinearAxis Orientation="Y" Minimum="0" />
+						</charting:Chart.Axes>
+						<charting:LineSeries DependentValuePath="CounterValue" IndependentValuePath="EventDateTimeLocal" ItemsSource="{Binding PerformanceCounterEntries}"
+										IsSelectionEnabled="True">
+							<charting:LineSeries.DataPointStyle>
+								<Style TargetType="{x:Type charting:DataPoint}">
+									<Setter Property="Background" Value="Blue" />
+									<Setter Property="Template" Value="{x:Null}"/>
+								</Style>
+							</charting:LineSeries.DataPointStyle>
+						</charting:LineSeries>
+						<charting:Chart.TitleStyle>
+							<Style TargetType="Control">
+								<Setter Property="Template" Value="{x:Null}"/>
+							</Style>
+						</charting:Chart.TitleStyle>
+						<charting:Chart.LegendStyle>
+							<Style TargetType="Control">
+								<Setter Property="Template" Value="{x:Null}"/>
+							</Style>
+						</charting:Chart.LegendStyle>
+					</charting:Chart>
+				</Grid>
+			</TabItem>
+		</TabControl>
+
+		<StatusBar Grid.Column="0" Grid.Row="3" >
+			<TextBlock Text="{Binding StatusBarMessage}" />
+		</StatusBar>
+
+	</Grid>
+
+</Window>
